@@ -1,0 +1,19 @@
+version: '3'
+services:
+  db:
+    image: postgres
+    environment:
+      POSTGRES_PASSWORD: password
+  spider:
+    build: ./scraper
+    depends_on:
+      - db
+  server:
+    build: ./app
+    ports:
+      - "8080:8080"
+    depends_on:
+      - db
+
+
+
