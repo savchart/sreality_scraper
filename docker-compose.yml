@@ -1,19 +1,39 @@
 version: '3'
 services:
   db:
-    image: postgres
-    environment:
-      POSTGRES_PASSWORD: password
-  spider:
-    build: ./scraper
-    depends_on:
-      - db
-  server:
-    build: ./app
+    image: bitnami/postgresql:latest
+    container_name: sreality-db
+    restart: always
     ports:
-      - "8080:8080"
+      - 5432:5432
+    environment:
+        POSTGRES_DB: sreality
+        POSTGRES_USER: sreality_user
+        POSTGRES_PASSWORD: sreality_pass
+    volumes:
+      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U sreality_user" ]
+      interval: 10s
+      timeout: 10s
+      retries: 3
+
+  spider:
+    build: ./sreality
+    container_name: sreality-spider
     depends_on:
-      - db
+      db:
+        condition: service_healthy
+
+  server:
+    build: ./server
+    container_name: sreality-server
+    restart: always
+    ports:
+      - 8080:8080
+    depends_on:
+      db:
+        condition: service_healthy
 
 
 
